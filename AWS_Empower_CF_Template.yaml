@@ -1,0 +1,85 @@
+Parameters:
+  S3BucketName:
+    Description: Please ARN of S3 bucket with /* where we have empower setup
+    Type: String
+  EmpowerFileZipName:
+    Descripion: Please enter Empower Zip file Name in s3
+    Type: String
+  JavaZipFileName:
+    Description: Please Enter Java zip file name in S3
+    Type: String
+    
+Resources:
+  SSHSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription:  SSH Web Access for External World
+        SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          FromPort: 22
+          IpProtocol: tcp
+          ToPort: 22
+        Tags:
+        - Key: Name
+          Value: SSH_SecurityGroup
+
+  HTTPWebAccessSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: HTTP Web Access for External World
+        SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+        Tags:
+        - Key: Name
+          Value: HTTP_Web_Access_SecurityGroup
+
+  S3ReadOnlyRole: 
+    Type: "AWS::IAM::Role"
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: "Allow"
+            Principal: 
+              Service: 
+                - "ec2.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Path: "/"
+
+  S3ReadOnlyPolicies: 
+    Type: "AWS::IAM::Policy"
+    Properties: 
+      PolicyName: "root"
+      PolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: "Allow"
+            Action: "s3:GetObject"
+            Resource: !Ref S3BucketName
+      Roles: 
+        - Ref: "S3ReadOnlyRole"
+  
+  S3ReadOnlyProfile: 
+    Type: "AWS::IAM::InstanceProfile"
+    Properties: 
+      Path: "/"
+      Roles: 
+        - Ref: "S3ReadOnlyRole"
+
+  EmpowerInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: ap-south-2a
+      ImageId: ami-02bfb9a4f72ec6609
+      InstanceType: t3.micro
+      IamInstanceProfile: !Ref S3ReadOnlyProfile
+      SecurityGroups:
+        - !Ref SSHSecurityGroup
+        - !Ref HTTPWebAccessSecurityGroup
+      Tags:
+        - Key: Name
+          Value: Empower_server_1
