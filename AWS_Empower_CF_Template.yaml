@@ -3,7 +3,7 @@ Parameters:
     Description: Please ARN of S3 bucket with /* where we have empower setup
     Type: String
   EmpowerFileZipName:
-    Descripion: Please enter Empower Zip file Name in s3
+    Description: Please enter Empower Zip file Name in s3
     Type: String
   JavaZipFileName:
     Description: Please Enter Java zip file name in S3
