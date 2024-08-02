@@ -95,8 +95,9 @@ Resources:
           dnf install -y java-21-openjdk.x86_64
           dnf install -y unzip
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/home/ec2-user/awscliv2.zip"
-          unzip awscliv2.zip
+          unzip /home/ec2-user/awscliv2.zip
           ./aws/install
+          alias aws=/usr/local/bin/aws
       Tags:
         - Key: Name
           Value: Empower_server
