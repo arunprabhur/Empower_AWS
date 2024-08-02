@@ -1,19 +1,18 @@
+#Paramters
+
 Parameters:
   S3BucketName:
-    Description: Please ARN of S3 bucket with /* where we have empower setup
+    Description: Please Enter S3 bucket name where we have empower setup
     Type: String
-  EmpowerFileZipName:
-    Description: Please enter Empower Zip file Name in s3
-    Type: String
-  JavaZipFileName:
-    Description: Please Enter Java zip file name in S3
-    Type: String
-    
+
 Resources:
+
+#security group for EC2
+
   SSHSecurityGroup:
       Type: AWS::EC2::SecurityGroup
       Properties:
-        GroupDescription:  SSH Web Access for External World
+        GroupDescription:  'Security Group to allow SSH'
         SecurityGroupIngress:
         - CidrIp: 0.0.0.0/0
           FromPort: 22
@@ -26,7 +25,7 @@ Resources:
   HTTPWebAccessSecurityGroup:
       Type: AWS::EC2::SecurityGroup
       Properties:
-        GroupDescription: HTTP Web Access for External World
+        GroupDescription: 'Security Group to allow port 8080'
         SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 8080
@@ -36,6 +35,7 @@ Resources:
         - Key: Name
           Value: HTTP_Web_Access_SecurityGroup
 
+# IAM Role for accessing S3 bucket
   S3ReadOnlyRole: 
     Type: "AWS::IAM::Role"
     Properties: 
@@ -49,37 +49,64 @@ Resources:
             Action: 
               - "sts:AssumeRole"
       Path: "/"
-
-  S3ReadOnlyPolicies: 
+  S3ReadPolicyGetObjectOnly: 
     Type: "AWS::IAM::Policy"
     Properties: 
-      PolicyName: "root"
+      PolicyName: "S3ReadPolicy-GetObjectOnly"
       PolicyDocument: 
         Version: "2012-10-17"
         Statement: 
           - Effect: "Allow"
             Action: "s3:GetObject"
-            Resource: !Ref S3BucketName
+            Resource: !Join
+                        - ''
+                        - - 'arn:aws:s3:::'
+                          - !Ref S3BucketName
+                          - '/*'
       Roles: 
         - Ref: "S3ReadOnlyRole"
-  
-  S3ReadOnlyProfile: 
+  EmpowerEC2InstanceProfile: 
     Type: "AWS::IAM::InstanceProfile"
     Properties: 
       Path: "/"
       Roles: 
         - Ref: "S3ReadOnlyRole"
 
+
+# EC2 Instance for Empower
+
   EmpowerInstance:
     Type: AWS::EC2::Instance
     Properties:
       AvailabilityZone: ap-south-2a
-      ImageId: ami-02bfb9a4f72ec6609
+      ImageId: ami-01f40ea5b39e4114c
       InstanceType: t3.micro
-      IamInstanceProfile: !Ref S3ReadOnlyProfile
+      IamInstanceProfile: !Ref EmpowerEC2InstanceProfile
+      KeyName: "MySSHKeyPair_Laptop"
       SecurityGroups:
         - !Ref SSHSecurityGroup
         - !Ref HTTPWebAccessSecurityGroup
+      UserData: 
+        Fn::Base64: |
+          #!/bin/bash -xe
+          dnf install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+          systemctl enable amazon-ssm-agent
+          systemctl start amazon-ssm-agent
+          dnf install -y java-21-openjdk.x86_64
+          dnf install -y unzip
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/home/ec2-user/awscliv2.zip"
+          unzip awscliv2.zip
+          ./aws/install
       Tags:
         - Key: Name
-          Value: Empower_server_1
+          Value: Empower_server
+
+
+#Outputs:
+
+Outputs:
+  PublicIp:
+    Description: Server Public IP
+    Value: !GetAtt EmpowerInstance.PublicIp
+    Export:
+      Name: !Sub "${AWS::StackName}-Empower-Instance-PublicIp"
