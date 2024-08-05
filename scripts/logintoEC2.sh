@@ -3,5 +3,5 @@
 echo "Loggin into to Instance"
 IPADDRESS=$1
 
-ssh -i /home/student/keys/lab-key.pem ec2-user@${IPADDRESS}
+ssh -i /home/student/keys/mylab.pem ec2-user@${IPADDRESS}
 

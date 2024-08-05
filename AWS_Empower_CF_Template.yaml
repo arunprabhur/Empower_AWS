@@ -113,7 +113,7 @@ Resources:
       ImageId: ami-0583d8c7a9c35822c
       InstanceType: t3.micro
       IamInstanceProfile: !Ref EmpowerEC2InstanceProfile
-      KeyName: "MySSHKeyPair_Laptop"
+      KeyName: "mylab"
       SecurityGroups:
         - !Ref SSHSecurityGroup
         - !Ref HTTPWebAccessSecurityGroup
