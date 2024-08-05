@@ -4,11 +4,42 @@ Parameters:
   S3BucketName:
     Description: Please Enter S3 bucket name where we have empower setup
     Type: String
-
+  DBInstanceID:
+    Default: EmpowerDBInstance
+    Description: Empower database instance
+    Type: String
+    MinLength: '1'
+    MaxLength: '63'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: >-
+      Must begin with a letter and must not end with a hyphen or contain two
+      consecutive hyphens.
+  DBName:
+    Default: empowerdb
+    Description: My database
+    Type: String
+    MinLength: '1'
+    MaxLength: '64'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: Must begin with a letter and contain only alphanumeric characters.
+  DBUsername:
+    NoEcho: 'true'
+    Description: Username for MySQL database access
+    Type: String
+    MinLength: '1'
+    MaxLength: '16'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+  DBPassword:
+    NoEcho: 'true'
+    Description: Password MySQL database access
+    Type: String
+    MinLength: '8'
+    MaxLength: '41'
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.   
 Resources:
-
 #security group for EC2
-
   SSHSecurityGroup:
       Type: AWS::EC2::SecurityGroup
       Properties:
@@ -78,8 +109,8 @@ Resources:
   EmpowerInstance:
     Type: AWS::EC2::Instance
     Properties:
-      AvailabilityZone: ap-south-2a
-      ImageId: ami-01f40ea5b39e4114c
+      AvailabilityZone: us-east-1a
+      ImageId: ami-0583d8c7a9c35822c
       InstanceType: t3.micro
       IamInstanceProfile: !Ref EmpowerEC2InstanceProfile
       KeyName: "MySSHKeyPair_Laptop"
@@ -102,6 +133,16 @@ Resources:
         - Key: Name
           Value: Empower_server
 
+  EmpowerDB:
+    Type: 'AWS::RDS::DBInstance'
+    Properties:
+      DBInstanceIdentifier: !Ref DBInstanceID
+      DBName: !Ref DBName
+      DBInstanceClass: db.t3.micro
+      AllocatedStorage: '20'
+      Engine: postgres
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
 
 #Outputs:
 
