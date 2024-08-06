@@ -2,8 +2,8 @@
 
 Parameters:
   S3BucketName:
-    Description: Please Enter S3 bucket name where we have empower setup
     Type: String
+    Description: The BucketName SSM parameter
   DBInstanceID:
     Default: EmpowerDBInstance
     Description: Empower database instance
@@ -108,6 +108,7 @@ Resources:
 
   EmpowerInstance:
     Type: AWS::EC2::Instance
+    DependsOn: EmpowerDB
     Properties:
       AvailabilityZone: us-east-1a
       ImageId: ami-0583d8c7a9c35822c
@@ -141,8 +142,8 @@ Resources:
       DBInstanceClass: db.t3.micro
       AllocatedStorage: '20'
       Engine: postgres
-      MasterUsername: !Ref DBUsername
-      MasterUserPassword: !Ref DBPassword
+      MasterUsername: 'postgres'
+      MasterUserPassword: 'postgres'
 
 #Outputs:
 
